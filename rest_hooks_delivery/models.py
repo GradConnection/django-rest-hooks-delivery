@@ -4,7 +4,6 @@ from django.conf import settings
 from django.db import models
 
 from django.utils import timezone
-from jsonfield import JSONField
 
 HOOK_EVENTS = getattr(settings, 'HOOK_EVENTS', None)
 if HOOK_EVENTS is None:
