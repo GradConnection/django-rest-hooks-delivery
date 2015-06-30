@@ -116,7 +116,7 @@ def batch_and_send(target_url):
                     try:
                         hook_dest = hook_target_model.objects.get(target=target_url)
                         now = datetime.now()
-                        stamp = mktime(now.timetuple()) #Custom HTTP header datetime
+                        stamp = format_date_time(mktime(now.timetuple()))
                         prepped.headers.update({'date': stamp})
                         prepped.headers.update(hook_dest.sign_headers(prepped.headers))
                         # content_headers.update({
