@@ -98,8 +98,9 @@ def batch_and_send(target_url):
 
                         try:
                             hook_dest = hook_target_model.objects.get(target=target_url)
-                            content_headers.update({'API_SIGNED_DIGEST': \
-                                                    hook_dest.sign_message(data)})
+                            content_headers.update({
+                            'API_KEY':hook_dest.api_key,
+                            'API_SIGNED_DIGEST': hook_dest.sign_message(data)})
                         except Exception as e:
                             pass
                     r = requests.post(
