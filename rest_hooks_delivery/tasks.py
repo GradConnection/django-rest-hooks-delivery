@@ -126,6 +126,7 @@ def batch_and_send(target_url):
                         pass
                     r = s.send(prepped)
                     print('REQUEST SENT: {res}'.format(res=r.status_code))
+                    print(r.text)
                     if (r.status_code > 299 and not 'retry' in \
                         settings.HOOK_DELIVERER_SETTINGS) or (r.status_code < 300):
                         events.delete()
