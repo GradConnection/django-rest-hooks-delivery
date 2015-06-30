@@ -23,6 +23,7 @@ BATCH_DELIVERER = 'rest_hooks_delivery.deliverers.batch'
 HOOK_DELIVERER = getattr(settings, 'HOOK_DELIVERER', None)
 HOOK_DELIVERER_SETTINGS = getattr(settings, 'HOOK_DELIVERER_SETTINGS', None)
 HOOK_TARGET_MODEL = getattr(settings, 'HOOK_TARGET_MODEL', 'core.Application')
+TEST = getattr(settings, 'TEST', False)
 
 BATCH_LOCK = 'batch_lock'
 
@@ -125,8 +126,14 @@ def batch_and_send(target_url):
                     except Exception as e:
                         pass
                     r = s.send(prepped)
-                    print('REQUEST SENT: {res}'.format(res=r.status_code))
-                    print(r.text)
+                    # If this is a test run, we want to pass the
+                    # status into redis to see if the result was
+                    # successful
+                    if TEST:
+                        redis.Redis(host=settings.REDIS_HOST,
+                                    port=settings.REDIS_PORT).set(
+                                            'rest_hooks_last_status',
+                                            r.status_code)
                     if (r.status_code > 299 and not 'retry' in \
                         settings.HOOK_DELIVERER_SETTINGS) or (r.status_code < 300):
                         events.delete()
