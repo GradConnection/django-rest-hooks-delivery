@@ -99,9 +99,6 @@ def batch_and_send(target_url):
 
                 if len(batch_data_list):
                     data = json.dumps(batch_data_list, cls=DjangoJSONEncoder)
-                    #We add 0 to 1000 random spaces at the end of the message to
-                    #introduce randomness enough for crypto
-                    data += int(random.random() * 1000) * ' '
                     content_headers={'Content-Type': 'application/json'}
                     if HOOK_TARGET_MODEL != '' and HOOK_TARGET_MODEL is not None:
                         hook_target_model = get_model(HOOK_TARGET_MODEL)
