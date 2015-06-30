@@ -57,7 +57,8 @@ def store_and_count(*args, **kwargs):
     hook_payload = kwargs.get('data', '{}')
     hook = kwargs.pop('_hook_id')
 
-    with redis.Redis().lock(BATCH_LOCK):
+    with redis.Redis(host=settings.REDIS_HOST,
+                     port=settings.REDIS_PORT).lock(BATCH_LOCK):
         StoredHook.objects.create(
             target=target_url,
             event=hook_event,
@@ -75,13 +76,15 @@ def fail_handler(uuid, target_url):
     clear_events(target_url)
 
 def clear_events(target_url):
-    with redis.Redis().lock(BATCH_LOCK):
+    with redis.Redis(host=settings.REDIS_HOST,
+                     port=settings.REDIS_PORT).lock(BATCH_LOCK):
         events = StoredHook.objects.filter(target=target_url).delete()
 
 @shared_task
 def batch_and_send(target_url):
     have_lock = False
-    _lock = redis.Redis().lock(BATCH_LOCK)
+    _lock = redis.Redis(host=settings.REDIS_HOST,
+                        port=settings.REDIS_PORT).lock(BATCH_LOCK)
     try:
         have_lock = _lock.acquire(blocking=True)
     finally:
