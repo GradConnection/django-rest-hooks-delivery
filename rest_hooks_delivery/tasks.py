@@ -118,7 +118,7 @@ def batch_and_send(target_url):
                         now = datetime.now()
                         stamp = format_date_time(mktime(now.timetuple()))
                         prepped.headers.update({'date': stamp})
-                        prepped.headers.update(hook_dest.sign_headers(prepped.headers))
+                        prepped.headers.update(hook_dest.sign_headers(prepped.headers, target_url))
                         # content_headers.update({
                         # 'API_KEY':hook_dest.api_key,
                         # 'API_SIGNED_DIGEST': hook_dest.sign_message(data)})
