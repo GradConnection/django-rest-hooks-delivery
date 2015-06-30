@@ -10,8 +10,14 @@ from rest_hooks_delivery.models import StoredHook
 
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
+from wsgiref.handlers import format_date_time
 
 import requests, json, redis, random
+
+from requests import Request, Session
+
+from datetime import datetime
+from time import mktime
 
 BATCH_DELIVERER = 'rest_hooks_delivery.deliverers.batch'
 HOOK_DELIVERER = getattr(settings, 'HOOK_DELIVERER', None)
@@ -96,17 +102,26 @@ def batch_and_send(target_url):
                     if HOOK_TARGET_MODEL != '' and HOOK_TARGET_MODEL is not None:
                         hook_target_model = get_model(HOOK_TARGET_MODEL)
 
-                        try:
-                            hook_dest = hook_target_model.objects.get(target=target_url)
-                            content_headers.update({
-                            'API_KEY':hook_dest.api_key,
-                            'API_SIGNED_DIGEST': hook_dest.sign_message(data)})
-                        except Exception as e:
-                            pass
-                    r = requests.post(
+
+                    s = Session()
+                    req = Request('POST',
                         target_url,
                         data=data,
                         headers=content_headers)
+                    prepped = s.prepare_request(req)
+                    #We know encrypt the headers and return the sig
+                    try:
+                        hook_dest = hook_target_model.objects.get(target=target_url)
+                        now = datetime.now()
+                        stamp = mktime(now.timetuple()) #Custom HTTP header datetime
+                        prepped.headers.update({'date': stamp})
+                        prepped.headers.update(hook_dest.sign_headers(prepped.headers))
+                        # content_headers.update({
+                        # 'API_KEY':hook_dest.api_key,
+                        # 'API_SIGNED_DIGEST': hook_dest.sign_message(data)})
+                    except Exception as e:
+                        pass
+                    r = s.send(prepped)
                     if (r.status_code > 299 and not 'retry' in \
                         settings.HOOK_DELIVERER_SETTINGS) or (r.status_code < 300):
                         events.delete()
