@@ -3,7 +3,7 @@
 import collections
 import json
 import threading
-
+import logging
 import requests
 
 from django.db.models import F
@@ -121,6 +121,9 @@ def retry(target, payload, instance=None, hook=None, cleanup=False, **kwargs):
     )
 
 def batch(target, payload, instance=None, hook=None, cleanup=False, **kwargs):
+    logger = logging.getLogger('gradcon.models.entity')
+    logger.info("i am inside batch in django-rest-hooks-delivery in deliverers.py")
+
     store_hook.delay(
         url=target,
         data=json.dumps(payload, cls=DjangoJSONEncoder)\
